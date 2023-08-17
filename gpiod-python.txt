@@ -1,0 +1,612 @@
+Help on module gpiod:
+
+NAME
+    gpiod - Python bindings for libgpiod.
+
+DESCRIPTION
+    This module wraps the native C API of libgpiod in a set of python classes.
+
+CLASSES
+    builtins.object
+        Chip
+        ChipIter
+        Line
+        LineBulk
+        LineEvent
+        LineIter
+    
+    class Chip(builtins.object)
+     |  Represents a GPIO chip.
+     |  
+     |  Chip object manages all resources associated with the GPIO chip
+     |  it represents.
+     |  
+     |  The gpiochip device file is opened during the object's construction.
+     |  The Chip object's constructor takes a description string as argument the
+     |  meaning of which depends on the second, optional parameter which defines
+     |  the way the description string should be interpreted. The available
+     |  options are: OPEN_BY_LABEL, OPEN_BY_NAME, OPEN_BY_NUMBER, OPEN_BY_PATH,
+     |  and OPEN_LOOKUP. The last option means that libgpiod should open the chip
+     |  based on the best guess what the path is. This is also the default if the
+     |  second argument is missing.
+     |  
+     |  Callers must close the chip by calling the close() method when it's no
+     |  longer used.
+     |  
+     |  Example:
+     |  
+     |      chip = gpiod.Chip('gpiochip0', gpiod.Chip.OPEN_BY_NAME)
+     |      do_something(chip)
+     |      chip.close()
+     |  
+     |  The gpiod.Chip class also supports controlled execution ('with' statement).
+     |  
+     |  Example:
+     |  
+     |      with gpiod.Chip('0', gpiod.Chip.OPEN_BY_NUMBER) as chip:
+     |          do_something(chip)
+     |  
+     |  Methods defined here:
+     |  
+     |  __enter__(...)
+     |      Controlled execution enter callback.
+     |  
+     |  __exit__(...)
+     |      Controlled execution exit callback.
+     |  
+     |  __init__(self, /, *args, **kwargs)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  __repr__(self, /)
+     |      Return repr(self).
+     |  
+     |  close(...)
+     |      close() -> None
+     |      
+     |      Close the associated gpiochip descriptor. The chip object must no longer
+     |      be used after this method is called.
+     |  
+     |  find_line(...)
+     |      find_line(name) -> gpiod.Line object or None
+     |      
+     |      Get the GPIO line by name.
+     |      
+     |        name
+     |          Line name (string)
+     |      
+     |      Returns a gpiod.Line object or None if line with given name is not
+     |      associated with this chip.
+     |  
+     |  find_lines(...)
+     |      find_lines(names) -> gpiod.LineBulk object
+     |      
+     |      Look up a set of lines by their names.
+     |      
+     |        names
+     |          Sequence of line names.
+     |      
+     |      Unlike find_line(), this method raises an exception if at least one line
+     |      from the list doesn't exist.
+     |  
+     |  get_all_lines(...)
+     |      get_all_lines() -> gpiod.LineBulk object
+     |      
+     |      Get all lines exposed by this Chip.
+     |  
+     |  get_line(...)
+     |      get_line(offset) -> gpiod.Line object
+     |      
+     |      Get the GPIO line at given offset.
+     |      
+     |        offset
+     |          Line offset (integer)
+     |  
+     |  get_lines(...)
+     |      get_lines(offsets) -> gpiod.LineBulk object
+     |      
+     |      Get a set of GPIO lines by their offsets.
+     |      
+     |        offsets
+     |          List of lines offsets.
+     |  
+     |  label(...)
+     |      label() -> string
+     |      
+     |      Get the label of the GPIO chip
+     |  
+     |  name(...)
+     |      name() -> string
+     |      
+     |      Get the name of the GPIO chip
+     |  
+     |  num_lines(...)
+     |      num_lines() -> integer
+     |      
+     |      Get the number of lines exposed by this GPIO chip.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods defined here:
+     |  
+     |  __new__(*args, **kwargs) from builtins.type
+     |      Create and return a new object.  See help(type) for accurate signature.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  OPEN_BY_LABEL = 4
+     |  
+     |  OPEN_BY_NAME = 2
+     |  
+     |  OPEN_BY_NUMBER = 5
+     |  
+     |  OPEN_BY_PATH = 3
+     |  
+     |  OPEN_LOOKUP = 1
+    
+    class ChipIter(builtins.object)
+     |  Allows to iterate over all GPIO chips in the system.
+     |  
+     |  The ChipIter's constructor takes no arguments.
+     |  
+     |  Each iteration yields the next open GPIO chip handle. The caller is
+     |  responsible for closing each chip
+     |  
+     |  Example:
+     |  
+     |      for chip in gpiod.ChipIter():
+     |          do_something_with_chip(chip)
+     |          chip.close()
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, /, *args, **kwargs)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  __iter__(self, /)
+     |      Implement iter(self).
+     |  
+     |  __next__(self, /)
+     |      Implement next(self).
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods defined here:
+     |  
+     |  __new__(*args, **kwargs) from builtins.type
+     |      Create and return a new object.  See help(type) for accurate signature.
+    
+    class Line(builtins.object)
+     |  Represents a GPIO line.
+     |  
+     |  The lifetime of this object is managed by the chip that owns it. Once
+     |  the corresponding gpiod.Chip is closed, a gpiod.Line object must not be
+     |  used.
+     |  
+     |  Line objects can only be created by the owning chip.
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, /, *args, **kwargs)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  __repr__(self, /)
+     |      Return repr(self).
+     |  
+     |  active_state(...)
+     |      active_state() -> integer
+     |      
+     |      Get the active state setting of this GPIO line.
+     |  
+     |  bias(...)
+     |      bias() -> integer
+     |      
+     |      Get the bias setting of this GPIO line.
+     |  
+     |  consumer(...)
+     |      consumer() -> string
+     |      
+     |      Get the consumer string of the GPIO line.
+     |  
+     |  direction(...)
+     |      direction() -> integer
+     |      
+     |      Get the direction setting of this GPIO line.
+     |  
+     |  event_get_fd(...)
+     |      event_get_fd() -> integer
+     |      
+     |      Get the event file descriptor number associated with this line.
+     |  
+     |  event_read(...)
+     |      event_read() -> gpiod.LineEvent object
+     |      
+     |      Read a single line event from this GPIO line object.
+     |  
+     |  event_read_multiple(...)
+     |      event_read_multiple() -> list of gpiod.LineEvent object
+     |      
+     |      Read multiple line events from this GPIO line object.
+     |  
+     |  event_wait(...)
+     |      event_wait([sec[ ,nsec]]) -> boolean
+     |      
+     |      Wait for a line event to occur on this GPIO line.
+     |      
+     |        sec
+     |          Number of seconds to wait before timeout.
+     |        nsec
+     |          Number of nanoseconds to wait before timeout.
+     |      
+     |      Returns True if an event occurred on this line before timeout. False
+     |      otherwise.
+     |  
+     |  get_value(...)
+     |      get_value() -> integer
+     |      
+     |      Read the current value of this GPIO line.
+     |  
+     |  is_open_drain(...)
+     |      is_open_drain() -> boolean
+     |      
+     |      Check if this line represents an open-drain GPIO.
+     |  
+     |  is_open_source(...)
+     |      is_open_source() -> boolean
+     |      
+     |      Check if this line represents an open-source GPIO.
+     |  
+     |  is_requested(...)
+     |      is_requested() -> boolean
+     |      
+     |      Check if this user has ownership of this line.
+     |  
+     |  is_used(...)
+     |      is_used() -> boolean
+     |      
+     |      Check if this line is used by the kernel or other user space process.
+     |  
+     |  name(...)
+     |      name() -> string
+     |      
+     |      Get the name of the GPIO line.
+     |  
+     |  offset(...)
+     |      offset() -> integer
+     |      
+     |      Get the offset of the GPIO line.
+     |  
+     |  owner(...)
+     |      owner() -> Chip object owning the line
+     |      
+     |      Get the GPIO chip owning this line.
+     |  
+     |  release(...)
+     |      release() -> None
+     |      
+     |      Release this GPIO line.
+     |  
+     |  request(...)
+     |      request(consumer[, type[, flags[, default_val]]]) -> None
+     |      
+     |      Request this GPIO line.
+     |      
+     |        consumer
+     |          Name of the consumer.
+     |        type
+     |          Type of the request.
+     |        flags
+     |          Other configuration flags.
+     |        default_val
+     |          Default value of this line.
+     |      Note: default_vals argument (sequence of default values passed down to
+     |      LineBulk.request()) is still supported for backward compatibility but is
+     |      now deprecated when requesting single lines.
+     |  
+     |  set_config(...)
+     |      set_config(direction,flags,value) -> None
+     |      
+     |      Set the configuration of this GPIO line.
+     |      
+     |        direction
+     |          New direction (integer)
+     |        flags
+     |          New flags (integer)
+     |        value
+     |          New value (integer)
+     |  
+     |  set_direction_input(...)
+     |      set_direction_input() -> None
+     |      
+     |      Set the direction of this GPIO line to input.
+     |  
+     |  set_direction_output(...)
+     |      set_direction_output(value) -> None
+     |      
+     |      Set the direction of this GPIO line to output.
+     |      
+     |        value
+     |          New value (integer)
+     |  
+     |  set_flags(...)
+     |      set_flags(flags) -> None
+     |      
+     |      Set the flags of this GPIO line.
+     |      
+     |        flags
+     |          New flags (integer)
+     |  
+     |  set_value(...)
+     |      set_value(value) -> None
+     |      
+     |      Set the value of this GPIO line.
+     |      
+     |        value
+     |          New value (integer)
+     |  
+     |  update(...)
+     |      update() -> None
+     |      
+     |      Re-read the line information from the kernel.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods defined here:
+     |  
+     |  __new__(*args, **kwargs) from builtins.type
+     |      Create and return a new object.  See help(type) for accurate signature.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  ACTIVE_HIGH = 1
+     |  
+     |  ACTIVE_LOW = 2
+     |  
+     |  BIAS_AS_IS = 1
+     |  
+     |  BIAS_DISABLE = 2
+     |  
+     |  BIAS_PULL_DOWN = 4
+     |  
+     |  BIAS_PULL_UP = 3
+     |  
+     |  DIRECTION_INPUT = 1
+     |  
+     |  DIRECTION_OUTPUT = 2
+    
+    class LineBulk(builtins.object)
+     |  Represents a set of GPIO lines.
+     |  
+     |  Objects of this type are immutable. The constructor takes as argument
+     |  a sequence of gpiod.Line objects. It doesn't accept objects of any other
+     |  type.
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, /, *args, **kwargs)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  __iter__(self, /)
+     |      Implement iter(self).
+     |  
+     |  __next__(self, /)
+     |      Implement next(self).
+     |  
+     |  __repr__(self, /)
+     |      Return repr(self).
+     |  
+     |  event_wait(...)
+     |      event_wait([sec[ ,nsec]]) -> gpiod.LineBulk object or None
+     |      
+     |      Poll the lines held by this LineBulk Object for line events.
+     |      
+     |        sec
+     |          Number of seconds to wait before timeout.
+     |        nsec
+     |          Number of nanoseconds to wait before timeout.
+     |      
+     |      Returns a gpiod.LineBulk object containing references to lines on which
+     |      events occurred or None if we reached the timeout without any event
+     |      occurring.
+     |  
+     |  get_values(...)
+     |      get_values() -> list of integers
+     |      
+     |      Read the values of all the lines held by this LineBulk object. The index
+     |      of each value in the returned list corresponds to the index of the line
+     |      in this gpiod.LineBulk object.
+     |  
+     |  release(...)
+     |      release() -> None
+     |      
+     |      Release all lines held by this LineBulk object.
+     |  
+     |  request(...)
+     |      request(consumer[, type[, flags[, default_vals]]]) -> None
+     |      
+     |      Request all lines held by this LineBulk object.
+     |      
+     |        consumer
+     |          Name of the consumer.
+     |        type
+     |          Type of the request.
+     |        flags
+     |          Other configuration flags.
+     |        default_vals
+     |          List of default values.
+     |  
+     |  set_config(...)
+     |      set_config(direction,flags,values) -> None
+     |      
+     |      Set the configuration of all the lines held by this LineBulk object.
+     |      
+     |        direction
+     |          New direction (integer)
+     |        flags
+     |          New flags (integer)
+     |        values
+     |          List of values (integers) to set when direction is output.
+     |      
+     |      The number of values in the list passed as argument must be the same as
+     |      the number of lines held by this gpiod.LineBulk object. The index of each
+     |      value corresponds to the index of each line in the object.
+     |  
+     |  set_direction_input(...)
+     |      set_direction_input() -> None
+     |      
+     |      Set the direction of all the lines held by this LineBulk object to input.
+     |  
+     |  set_direction_output(...)
+     |      set_direction_output(value) -> None
+     |      
+     |      Set the direction of all the lines held by this LineBulk object to output.
+     |      
+     |        values
+     |          List of values (integers) to set when direction is output.
+     |      
+     |      The number of values in the list passed as argument must be the same as
+     |      the number of lines held by this gpiod.LineBulk object. The index of each
+     |      value corresponds to the index of each line in the object.
+     |  
+     |  set_flags(...)
+     |      set_flags(flags) -> None
+     |      
+     |      Set the flags of all the lines held by this LineBulk object.
+     |      
+     |        flags
+     |          New flags (integer)
+     |  
+     |  set_values(...)
+     |      set_values(values) -> None
+     |      
+     |      Set the values of all the lines held by this LineBulk object.
+     |      
+     |        values
+     |          List of values (integers) to set.
+     |      
+     |      The number of values in the list passed as argument must be the same as
+     |      the number of lines held by this gpiod.LineBulk object. The index of each
+     |      value corresponds to the index of each line in the object.
+     |  
+     |  to_list(...)
+     |      to_list() -> list of gpiod.Line objects
+     |      
+     |      Convert this LineBulk to a list
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods defined here:
+     |  
+     |  __new__(*args, **kwargs) from builtins.type
+     |      Create and return a new object.  See help(type) for accurate signature.
+    
+    class LineEvent(builtins.object)
+     |  Represents a single GPIO line event. This object is immutable and can only
+     |  be created by an instance of gpiod.Line.
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, /, *args, **kwargs)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  __repr__(self, /)
+     |      Return repr(self).
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods defined here:
+     |  
+     |  __new__(*args, **kwargs) from builtins.type
+     |      Create and return a new object.  See help(type) for accurate signature.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors defined here:
+     |  
+     |  nsec
+     |      Nanoseconds value of the line event timestamp (integer).
+     |  
+     |  sec
+     |      Seconds value of the line event timestamp (integer).
+     |  
+     |  source
+     |      Line object representing the GPIO line on which this event
+     |      occurred (gpiod.Line object).
+     |  
+     |  type
+     |      Event type of this line event (integer).
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  FALLING_EDGE = 2
+     |  
+     |  RISING_EDGE = 1
+    
+    class LineIter(builtins.object)
+     |  Allows to iterate over all lines exposed by a GPIO chip.
+     |  
+     |  New line iterator is created by passing a reference to an open gpiod.Chip
+     |  object to the constructor of gpiod.LineIter.
+     |  
+     |  Caller doesn't need to handle the resource management for lines as their
+     |  lifetime is managed by the owning chip.
+     |  
+     |  Example:
+     |  
+     |      chip = gpiod.Chip('gpiochip0')
+     |      for line in gpiod.LineIter(chip):
+     |          do_stuff_with_line(line)
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, /, *args, **kwargs)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  __iter__(self, /)
+     |      Implement iter(self).
+     |  
+     |  __next__(self, /)
+     |      Implement next(self).
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods defined here:
+     |  
+     |  __new__(*args, **kwargs) from builtins.type
+     |      Create and return a new object.  See help(type) for accurate signature.
+
+FUNCTIONS
+    find_line(...)
+        find_line(name) -> gpiod.Line object or None
+        
+        Lookup a GPIO line by name. Search all gpiochips. Returns a gpiod.Line
+        or None if a line with given name doesn't exist in the system.
+        
+        NOTE: the gpiod.Chip object owning the returned line must be closed
+        by the caller.
+        
+          name
+            Name of the line to find (string).
+    
+    version_string(...)
+        version_string() -> string
+        
+        DEPRECATED: use __version__ module attribute instead.
+        Get the API version of the library as a human-readable string.
+
+DATA
+    LINE_REQ_DIR_AS_IS = 1
+    LINE_REQ_DIR_IN = 2
+    LINE_REQ_DIR_OUT = 3
+    LINE_REQ_EV_BOTH_EDGES = 6
+    LINE_REQ_EV_FALLING_EDGE = 4
+    LINE_REQ_EV_RISING_EDGE = 5
+    LINE_REQ_FLAG_ACTIVE_LOW = 4
+    LINE_REQ_FLAG_BIAS_DISABLE = 8
+    LINE_REQ_FLAG_BIAS_PULL_DOWN = 16
+    LINE_REQ_FLAG_BIAS_PULL_UP = 32
+    LINE_REQ_FLAG_OPEN_DRAIN = 1
+    LINE_REQ_FLAG_OPEN_SOURCE = 2
+
+VERSION
+    1.6.2
+
+FILE
+    /usr/lib/python3/dist-packages/gpiod.cpython-39-aarch64-linux-gnu.so
+
+
